@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"./printcols"
 )
 
 func main() {
@@ -27,7 +29,8 @@ func main() {
 
 	names := getEntryNames(entries, *directoryTrailingSlash)
 
-	fmt.Printf("%v", names)
+	// fmt.Printf("%v", names)
+	printcols.PrintColumns(&names, 4);
 }
 
 func filterHidden(entries []os.DirEntry) []os.DirEntry {
