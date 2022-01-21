@@ -3,37 +3,54 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
 
 func main() {
-	showHidden := flag.Bool("a", false, "display hidden files")
+	showHidden := flag.Bool("a", false, "display hidden entries")
+	directoryTrailingSlash := flag.Bool("F", false, "add '/' char at the end of each directory name")
 	flag.Parse()
 
 	arguments := flag.Args()
 	path := arguments[0]
 
-	files, err := getDirectoryContents(path, *showHidden)
-	if err != nil {
-		println("No such file or directory")
-		return
-	}
-	fmt.Printf("%v", files)
-}
-
-func getDirectoryContents(path string, showHidden bool) ([]string, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
-		return nil, err
+		fmt.Println("Could not find directory '%s'", path)
+		return
 	}
-	var files []string
+
+	if !*showHidden {
+		entries = filterHidden(entries)
+	}
+
+	names := getEntryNames(entries, *directoryTrailingSlash)
+
+	fmt.Printf("%v", names)
+}
+
+func filterHidden(entries []os.DirEntry) []os.DirEntry {
+	var filteredEntries []os.DirEntry
 	for _, entry := range entries {
-		if showHidden == true || !strings.HasPrefix(entry.Name(), ".") {
-			files = append(files, entry.Name())
+		if !strings.HasPrefix(entry.Name(), ".") {
+			filteredEntries = append(filteredEntries, entry)
 		}
 	}
-	return files, nil
+	return filteredEntries
+}
+
+func getEntryNames(entries []os.DirEntry, directoryTrailingSlash bool) []string {
+	var names []string
+	for _, entry := range entries {
+		names = append(names, getEntryName(entry, directoryTrailingSlash))
+	}
+	return names
+}
+
+func getEntryName(entry os.DirEntry, directoryTrailingSlash bool) string {
+	if entry.IsDir() && directoryTrailingSlash {
+		return entry.Name() + "/"
+	}
+	return entry.Name()
 }
